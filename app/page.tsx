@@ -235,7 +235,7 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* 页面标题 */}
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-fantasy text-forge-copper mb-2">世界观核心生成</h2>
+          <h2 className="text-3xl font-fantasy text-forge-copper mb-2">世界观核心生成 v2</h2>
           <p className="text-gray-600">输入你的灵感，生成完整的架空世界观设定</p>
           
           {/* 功能说明 */}
