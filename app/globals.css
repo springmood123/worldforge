@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --forge-gold: #D4AF37;
+  --forge-copper: #B87333;
+}
+
+body {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  background-color: #faf8f5;
+  color: #0a0a0f;
+}
+
+.dark {
+  background-color: #0a0a0f;
+  color: #faf8f5;
+}
+
+.light {
+  background-color: #faf8f5;
+  color: #0a0a0f;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #e8e6e3;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #B87333;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #D4AF37;
+}
+
+/* 骨架屏动画 */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #d4d4d4 25%, #e8e8e8 50%, #d4d4d4 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* 卡片悬浮效果 */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+}
+
+/* 按钮发光效果 */
+.btn-glow {
+  box-shadow: 0 0 20px rgba(184, 115, 51, 0.3);
+}
+
+.btn-glow:hover {
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
+}

@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "devCommand": "npm run dev",
+  "framework": "nextjs",
+  "regions": ["hkg1"],
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
+  },
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/"
+    }
+  ]
+}
