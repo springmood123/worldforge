@@ -5,7 +5,7 @@ import Navbar from '../components/Navbar';
 import WorldGenerator from '../components/WorldGenerator';
 import MapGenerator from '../components/MapGenerator';
 import InspirationRecommend from '../components/InspirationRecommend';
-import { Map, BookOpen, CheckCircle2, Save, Download, History, Copy, Check } from 'lucide-react';
+import { Map, BookOpen, CheckCircle2, Download, FileText, FileDown } from 'lucide-react';
 
 interface Character {
   name: string;
@@ -97,122 +97,399 @@ export default function Home() {
   // 功能选项状态
   const [showMap, setShowMap] = useState(false);
   const [showInspiration, setShowInspiration] = useState(false);
-  
-  // 历史记录存储相关状态
-  const [historyId, setHistoryId] = useState('');
-  const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  // 生成唯一的历史记录ID
-  const generateHistoryId = () => {
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).substring(2, 8);
-    return `WF-${timestamp}-${random}`;
-  };
-
-  // 保存当前会话历史
-  const saveCurrentHistory = () => {
-    if (!worldData) {
-      alert('请先生成一个世界观！');
-      return;
-    }
-
-    const newId = generateHistoryId();
-    const historyData: CompleteHistoryData = {
-      version: '1.0',
-      timestamp: new Date(),
-      worldData,
-      worldHistory,
-      inspirationHistory,
-      termConversations,
-      showMap,
-      showInspiration
-    };
-
-    try {
-      localStorage.setItem(`worldforge-${newId}`, JSON.stringify(historyData));
-      setCurrentHistoryId(newId);
-      setHistoryId(newId);
-      setShowSaveSuccess(true);
-      setTimeout(() => setShowSaveSuccess(false), 3000);
-    } catch (error) {
-      console.error('保存历史记录失败:', error);
-      alert('保存失败，请重试！');
-    }
-  };
-
-  // 加载历史记录
-  const loadHistory = () => {
-    if (!historyId.trim()) {
-      alert('请输入历史记录ID！');
-      return;
-    }
-
-    setIsLoadingHistory(true);
-    
-    try {
-      const storedData = localStorage.getItem(`worldforge-${historyId.trim()}`);
-      
-      if (!storedData) {
-        alert('未找到对应的历史记录！');
-        return;
-      }
-
-      const historyData: CompleteHistoryData = JSON.parse(storedData);
-      
-      // 恢复数据
-      setWorldData(historyData.worldData);
-      setWorldHistory(historyData.worldHistory.map(item => ({
-        ...item,
-        timestamp: new Date(item.timestamp)
-      })));
-      setInspirationHistory(historyData.inspirationHistory.map(item => ({
-        ...item,
-        timestamp: new Date(item.timestamp)
-      })));
-      setTermConversations(historyData.termConversations.map(conv => ({
-        ...conv,
-        timestamp: new Date(conv.timestamp),
-        messages: conv.messages.map(msg => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp)
-        }))
-      })));
-      setShowMap(historyData.showMap);
-      setShowInspiration(historyData.showInspiration);
-      setCurrentHistoryId(historyId.trim());
-      
-      alert('历史记录加载成功！');
-    } catch (error) {
-      console.error('加载历史记录失败:', error);
-      alert('加载失败，请检查ID是否正确！');
-    } finally {
-      setIsLoadingHistory(false);
-    }
-  };
-
-  // 复制当前ID到剪贴板
-  const copyHistoryId = async () => {
-    if (!currentHistoryId) return;
-    
-    try {
-      await navigator.clipboard.writeText(currentHistoryId);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.error('复制失败:', error);
-    }
-  };
+  const [showExportOptions, setShowExportOptions] = useState(false);
 
   const handleWorldGenerated = (world: WorldData) => {
     setWorldData(world);
     // 生成后重置显示状态，让用户重新选择
     setShowMap(false);
     setShowInspiration(false);
-    // 生成新世界观时清除旧的历史记录ID
-    setCurrentHistoryId(null);
+  };
+
+  const formatWorldForExport = (): string => {
+    if (!worldData) return '';
+    
+    let content = '';
+    content += `═══════════════════════════════════════════════════════════════\n`;
+    content += `                    WorldForge 世界观构建工具\n`;
+    content += `═══════════════════════════════════════════════════════════════\n\n`;
+    content += `📅 生成时间: ${new Date().toLocaleString('zh-CN')}\n\n`;
+    
+    if (worldData.socialCulture) {
+      content += `═══════════════════════════════════════════════════════════════\n`;
+      content += `                   社会文化与阶层\n`;
+      content += `═══════════════════════════════════════════════════════════════\n\n`;
+      content += `${worldData.socialCulture}\n\n`;
+    }
+    
+    if (worldData.customs) {
+      content += `═══════════════════════════════════════════════════════════════\n`;
+      content += `                   习俗与节日\n`;
+      content += `═══════════════════════════════════════════════════════════════\n\n`;
+      content += `${worldData.customs}\n\n`;
+    }
+    
+    if (worldData.geography) {
+      content += `═══════════════════════════════════════════════════════════════\n`;
+      content += `                   地理与环境\n`;
+      content += `═══════════════════════════════════════════════════════════════\n\n`;
+      content += `${worldData.geography}\n\n`;
+    }
+    
+    if (worldData.factions) {
+      content += `═══════════════════════════════════════════════════════════════\n`;
+      content += `                   核心势力与冲突\n`;
+      content += `═══════════════════════════════════════════════════════════════\n\n`;
+      content += `${worldData.factions}\n\n`;
+    }
+    
+    if (worldData.characters && worldData.characters.length > 0) {
+      content += `═══════════════════════════════════════════════════════════════\n`;
+      content += `                   角色示例\n`;
+      content += `═══════════════════════════════════════════════════════════════\n\n`;
+      worldData.characters.forEach((char, index) => {
+        content += `【${index + 1}】${char.name}\n`;
+        content += `性格: ${char.personality}\n`;
+        content += `特点: ${char.quirk}\n\n`;
+      });
+    }
+    
+    if (worldData.backstory) {
+      content += `═══════════════════════════════════════════════════════════════\n`;
+      content += `                   背景故事\n`;
+      content += `═══════════════════════════════════════════════════════════════\n\n`;
+      content += `${worldData.backstory}\n\n`;
+    }
+    
+    if (inspirationHistory && inspirationHistory.length > 0) {
+      content += `═══════════════════════════════════════════════════════════════\n`;
+      content += `                   灵感推荐记录\n`;
+      content += `═══════════════════════════════════════════════════════════════\n\n`;
+      let inspIndex = 1;
+      inspirationHistory.forEach((item) => {
+        if (item.data.historicalEvents && item.data.historicalEvents.length > 0) {
+          item.data.historicalEvents.forEach((event) => {
+            content += `【${inspIndex}】${event.title}\n`;
+            content += `类型: 历史事件\n`;
+            content += `描述: ${event.description.substring(0, 200)}${event.description.length > 200 ? '...' : ''}\n`;
+            if (event.similarity) {
+              content += `相似点: ${event.similarity}\n`;
+            }
+            content += `───────────────────────────────────────────────────────────────\n\n`;
+            inspIndex++;
+          });
+        }
+        if (item.data.fictionalWorlds && item.data.fictionalWorlds.length > 0) {
+          item.data.fictionalWorlds.forEach((world) => {
+            content += `【${inspIndex}】${world.title}\n`;
+            content += `类型: 架空世界\n`;
+            content += `描述: ${world.description.substring(0, 200)}${world.description.length > 200 ? '...' : ''}\n`;
+            if (world.similarity) {
+              content += `相似点: ${world.similarity}\n`;
+            }
+            content += `───────────────────────────────────────────────────────────────\n\n`;
+            inspIndex++;
+          });
+        }
+        if (item.data.plotFragments && item.data.plotFragments.length > 0) {
+          item.data.plotFragments.forEach((fragment) => {
+            content += `【${inspIndex}】${fragment.title}\n`;
+            content += `类型: 情节片段\n`;
+            content += `描述: ${fragment.description.substring(0, 200)}${fragment.description.length > 200 ? '...' : ''}\n`;
+            if (fragment.application) {
+              content += `应用: ${fragment.application}\n`;
+            }
+            content += `───────────────────────────────────────────────────────────────\n\n`;
+            inspIndex++;
+          });
+        }
+      });
+    }
+    
+    content += `═══════════════════════════════════════════════════════════════\n`;
+    content += `                    WorldForge 世界观构建工具\n`;
+    content += `═══════════════════════════════════════════════════════════════\n`;
+    
+    return content;
+  };
+
+  const exportAsTxt = () => {
+    const content = formatWorldForExport();
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const worldName = worldData?.socialCulture?.substring(0, 20) || '世界观';
+    link.download = `WorldForge_${worldName}_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setShowExportOptions(false);
+  };
+
+  const exportAsHtml = () => {
+    if (!worldData) return;
+    
+    const worldName = worldData.socialCulture?.substring(0, 20) || '世界观';
+    const htmlContent = `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WorldForge - ${worldName}</title>
+  <style>
+    body { font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif; max-width: 1000px; margin: 0 auto; padding: 30px; background: linear-gradient(135deg, #fef9f3 0%, #f5f0e6 100%); }
+    .header { background: linear-gradient(135deg, #b87333 0%, #d4af37 100%); color: white; padding: 30px; border-radius: 15px; text-align: center; margin-bottom: 30px; box-shadow: 0 8px 32px rgba(184, 115, 51, 0.3); }
+    .header h1 { font-size: 2.5em; margin: 0; font-weight: 300; letter-spacing: 4px; }
+    .header p { margin-top: 10px; opacity: 0.9; }
+    .section { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 4px solid #b87333; }
+    .section-title { color: #b87333; font-size: 1.4em; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid #f0e6d2; }
+    .section-content { color: #333; line-height: 1.8; font-size: 1.05em; }
+    .character-item { background: #faf8f5; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+    .character-name { color: #b87333; font-weight: bold; }
+    .inspiration-item { background: #faf8f5; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+    .inspiration-title { color: #b87333; font-weight: bold; }
+    .inspiration-type { color: #888; font-size: 0.9em; margin-left: 10px; }
+    .footer { text-align: center; color: #888; padding: 20px; font-size: 0.9em; border-top: 1px solid #eee; }
+    .meta-info { background: #faf8f5; padding: 15px; border-radius: 8px; margin-bottom: 25px; text-align: center; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>WorldForge</h1>
+    <p>世界观构建工具</p>
+  </div>
+  
+  <div class="meta-info">
+    📅 ${new Date().toLocaleString('zh-CN')}
+  </div>
+
+  ${worldData.socialCulture ? `
+  <div class="section">
+    <h2 class="section-title">👥 社会文化与阶层</h2>
+    <div class="section-content">${worldData.socialCulture}</div>
+  </div>
+  ` : ''}
+
+  ${worldData.customs ? `
+  <div class="section">
+    <h2 class="section-title">🎉 习俗与节日</h2>
+    <div class="section-content">${worldData.customs}</div>
+  </div>
+  ` : ''}
+
+  ${worldData.geography ? `
+  <div class="section">
+    <h2 class="section-title">🌍 地理与环境</h2>
+    <div class="section-content">${worldData.geography}</div>
+  </div>
+  ` : ''}
+
+  ${worldData.factions ? `
+  <div class="section">
+    <h2 class="section-title">⚔️ 核心势力与冲突</h2>
+    <div class="section-content">${worldData.factions}</div>
+  </div>
+  ` : ''}
+
+  ${worldData.characters && worldData.characters.length > 0 ? `
+  <div class="section">
+    <h2 class="section-title">👤 角色示例</h2>
+    <div class="section-content">
+      ${worldData.characters.map((char, index) => `
+        <div class="character-item">
+          <div><span class="character-name">【${index + 1}】${char.name}</span></div>
+          <div style="margin-top: 5px;"><strong>性格：</strong>${char.personality}</div>
+          <div style="margin-top: 3px;"><strong>特点：</strong>${char.quirk}</div>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+  ` : ''}
+
+  ${worldData.backstory ? `
+  <div class="section">
+    <h2 class="section-title">📜 背景故事</h2>
+    <div class="section-content">${worldData.backstory}</div>
+  </div>
+  ` : ''}
+
+  ${inspirationHistory && inspirationHistory.length > 0 ? `
+  <div class="section">
+    <h2 class="section-title">💡 灵感推荐记录</h2>
+    <div class="section-content">
+      ${(() => {
+        const items: string[] = [];
+        let index = 1;
+        inspirationHistory.forEach((item) => {
+          if (item.data.historicalEvents) {
+            item.data.historicalEvents.forEach((event) => {
+              items.push(`
+                <div class="inspiration-item">
+                  <div><span class="inspiration-title">【${index}】${event.title}</span><span class="inspiration-type">历史事件</span></div>
+                  <div style="margin-top: 10px;">${event.description.substring(0, 300)}${event.description.length > 300 ? '...' : ''}</div>
+                  ${event.similarity ? `<div style="margin-top: 8px; color: #2d7d46; font-size: 0.9em;">🔗 ${event.similarity}</div>` : ''}
+                </div>
+              `);
+              index++;
+            });
+          }
+          if (item.data.fictionalWorlds) {
+            item.data.fictionalWorlds.forEach((world) => {
+              items.push(`
+                <div class="inspiration-item">
+                  <div><span class="inspiration-title">【${index}】${world.title}</span><span class="inspiration-type">架空世界</span></div>
+                  <div style="margin-top: 10px;">${world.description.substring(0, 300)}${world.description.length > 300 ? '...' : ''}</div>
+                  ${world.similarity ? `<div style="margin-top: 8px; color: #2d7d46; font-size: 0.9em;">🔗 ${world.similarity}</div>` : ''}
+                </div>
+              `);
+              index++;
+            });
+          }
+          if (item.data.plotFragments) {
+            item.data.plotFragments.forEach((fragment) => {
+              items.push(`
+                <div class="inspiration-item">
+                  <div><span class="inspiration-title">【${index}】${fragment.title}</span><span class="inspiration-type">情节片段</span></div>
+                  <div style="margin-top: 10px;">${fragment.description.substring(0, 300)}${fragment.description.length > 300 ? '...' : ''}</div>
+                  ${fragment.application ? `<div style="margin-top: 8px; color: #2d7d46; font-size: 0.9em;">🔗 ${fragment.application}</div>` : ''}
+                </div>
+              `);
+              index++;
+            });
+          }
+        });
+        return items.join('');
+      })()}
+    </div>
+  </div>
+  ` : ''}
+
+  <div class="footer">
+    <p>WorldForge - 灵感激荡 | 一站式架空世界观构建平台</p>
+  </div>
+</body>
+</html>
+    `.trim();
+
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `WorldForge_${worldName}_${new Date().toISOString().split('T')[0]}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setShowExportOptions(false);
+  };
+
+  const exportAsMarkdown = () => {
+    if (!worldData) return;
+    
+    let content = '';
+    const worldName = worldData.socialCulture?.substring(0, 20) || '世界观';
+    
+    content += `# WorldForge - ${worldName}\n\n`;
+    content += `---\n\n`;
+    content += `> 📅 ${new Date().toLocaleString('zh-CN')}\n\n`;
+    content += `---\n\n`;
+    
+    if (worldData.socialCulture) {
+      content += `## 👥 社会文化与阶层\n\n`;
+      content += `${worldData.socialCulture}\n\n`;
+    }
+    
+    if (worldData.customs) {
+      content += `---\n\n`;
+      content += `## 🎉 习俗与节日\n\n`;
+      content += `${worldData.customs}\n\n`;
+    }
+    
+    if (worldData.geography) {
+      content += `---\n\n`;
+      content += `## 🌍 地理与环境\n\n`;
+      content += `${worldData.geography}\n\n`;
+    }
+    
+    if (worldData.factions) {
+      content += `---\n\n`;
+      content += `## ⚔️ 核心势力与冲突\n\n`;
+      content += `${worldData.factions}\n\n`;
+    }
+    
+    if (worldData.characters && worldData.characters.length > 0) {
+      content += `---\n\n`;
+      content += `## 👤 角色示例\n\n`;
+      worldData.characters.forEach((char, index) => {
+        content += `### 【${index + 1}】${char.name}\n\n`;
+        content += `**性格**: ${char.personality}\n\n`;
+        content += `**特点**: ${char.quirk}\n\n`;
+      });
+    }
+    
+    if (worldData.backstory) {
+      content += `---\n\n`;
+      content += `## 📜 背景故事\n\n`;
+      content += `${worldData.backstory}\n\n`;
+    }
+    
+    if (inspirationHistory && inspirationHistory.length > 0) {
+      content += `---\n\n`;
+      content += `## 💡 灵感推荐记录\n\n`;
+      let inspIndex = 1;
+      inspirationHistory.forEach((item) => {
+        if (item.data.historicalEvents && item.data.historicalEvents.length > 0) {
+          item.data.historicalEvents.forEach((event) => {
+            content += `### 【${inspIndex}】${event.title}\n\n`;
+            content += `**类型**: 历史事件\n\n`;
+            content += `${event.description.substring(0, 300)}${event.description.length > 300 ? '...' : ''}\n\n`;
+            if (event.similarity) {
+              content += `> 🔗 ${event.similarity}\n\n`;
+            }
+            inspIndex++;
+          });
+        }
+        if (item.data.fictionalWorlds && item.data.fictionalWorlds.length > 0) {
+          item.data.fictionalWorlds.forEach((world) => {
+            content += `### 【${inspIndex}】${world.title}\n\n`;
+            content += `**类型**: 架空世界\n\n`;
+            content += `${world.description.substring(0, 300)}${world.description.length > 300 ? '...' : ''}\n\n`;
+            if (world.similarity) {
+              content += `> 🔗 ${world.similarity}\n\n`;
+            }
+            inspIndex++;
+          });
+        }
+        if (item.data.plotFragments && item.data.plotFragments.length > 0) {
+          item.data.plotFragments.forEach((fragment) => {
+            content += `### 【${inspIndex}】${fragment.title}\n\n`;
+            content += `**类型**: 情节片段\n\n`;
+            content += `${fragment.description.substring(0, 300)}${fragment.description.length > 300 ? '...' : ''}\n\n`;
+            if (fragment.application) {
+              content += `> 🔗 ${fragment.application}\n\n`;
+            }
+            inspIndex++;
+          });
+        }
+      });
+    }
+    
+    content += `---\n\n`;
+    content += `*WorldForge - 灵感激荡 | 一站式架空世界观构建平台*\n`;
+    
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `WorldForge_${worldName}_${new Date().toISOString().split('T')[0]}.md`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setShowExportOptions(false);
   };
 
   const getWorldDescription = () => {
@@ -235,7 +512,7 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* 页面标题 */}
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-fantasy text-forge-copper mb-2">世界观核心生成 v2</h2>
+          <h2 className="text-3xl font-fantasy text-forge-copper mb-2">世界观核心生成</h2>
           <p className="text-gray-600">输入你的灵感，生成完整的架空世界观设定</p>
           
           {/* 功能说明 */}
@@ -246,105 +523,12 @@ export default function Home() {
               <li>• <span className="text-forge-copper">生成世界</span>：点击按钮，AI将为你构建完整的世界观设定</li>
               <li>• <span className="text-forge-copper">查看结果</span>：包含社会文化、习俗节日、地理环境、核心势力、角色示例和背景故事</li>
               <li>• <span className="text-forge-copper">扩展功能</span>：生成世界观后，可选择生成幻想地图和获取灵感推荐</li>
-              <li>• <span className="text-forge-copper">历史记录</span>：所有生成的内容都会自动保存，方便随时查看</li>
+              <li>• <span className="text-forge-copper">导出记录</span>：在追问功能中可以导出会话记录到本地</li>
             </ul>
           </div>
         </div>
 
-        {/* 历史记录存储和检索区域 */}
-        <div className="bg-white/80 backdrop-blur rounded-xl p-6 border border-forge-copper/20 shadow-lg mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <History className="w-5 h-5 text-forge-copper" />
-            <h3 className="text-forge-copper text-lg font-fantasy">历史记录管理</h3>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* 保存当前会话 */}
-            <div className="bg-gray-100/50 rounded-lg p-4">
-              <h4 className="text-forge-copper font-semibold text-sm mb-3 flex items-center gap-2">
-                <Save className="w-4 h-4" />
-                保存当前会话
-              </h4>
-              {currentHistoryId ? (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 p-2 bg-gray-200/50 rounded-lg">
-                    <span className="text-gray-600 text-sm">会话ID：</span>
-                    <code className="flex-1 bg-gray-300/50 px-2 py-1 rounded text-forge-copper text-sm font-mono">
-                      {currentHistoryId}
-                    </code>
-                    <button
-                      onClick={copyHistoryId}
-                      className="p-1.5 hover:bg-forge-copper/20 rounded transition-colors text-forge-copper"
-                      title="复制ID"
-                    >
-                      {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {showSaveSuccess && (
-                    <div className="text-green-500 text-sm flex items-center gap-1">
-                      <Check className="w-4 h-4" />
-                      保存成功！
-                    </div>
-                  )}
-                  <button
-                    onClick={saveCurrentHistory}
-                    className="w-full py-2 bg-forge-copper/30 hover:bg-forge-copper/50 text-forge-copper rounded-lg transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Save className="w-4 h-4" />
-                    更新保存
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-gray-600 text-sm">
-                    生成世界观后，可以保存当前会话以便下次继续
-                  </p>
-                  <button
-                    onClick={saveCurrentHistory}
-                    disabled={!worldData}
-                    className="w-full py-2 bg-gradient-to-r from-forge-copper to-forge-gold disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center justify-center gap-2 hover:from-forge-gold hover:to-forge-copper"
-                  >
-                    <Save className="w-4 h-4" />
-                    保存当前会话
-                  </button>
-                </div>
-              )}
-            </div>
-            
-            {/* 加载历史会话 */}
-            <div className="bg-forge-dark-700/30 rounded-lg p-4">
-              <h4 className="text-forge-gold font-semibold text-sm mb-3 flex items-center gap-2">
-                <Download className="w-4 h-4" />
-                加载历史会话
-              </h4>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-light-400 text-sm block mb-1">输入会话ID</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={historyId}
-                      onChange={(e) => setHistoryId(e.target.value)}
-                      placeholder="例如：WF-abc123-xyz..."
-                      className="flex-1 bg-forge-dark-600/50 border border-forge-copper/30 rounded-lg px-3 py-2 text-light-200 placeholder-light-500 focus:outline-none focus:border-forge-copper/50 text-sm"
-                    />
-                    <button
-                      onClick={loadHistory}
-                      disabled={isLoadingHistory || !historyId.trim()}
-                      className="px-4 py-2 bg-forge-gold hover:bg-forge-gold/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center gap-2"
-                    >
-                      {isLoadingHistory ? <Download className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                      加载
-                    </button>
-                  </div>
-                </div>
-                <p className="text-light-500 text-xs">
-                  提示：输入之前保存的会话ID即可恢复完整的会话历史
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+
 
         {/* 内容区域 */}
         <div className="transition-opacity duration-300">
@@ -358,7 +542,7 @@ export default function Home() {
           />
 
           {/* 世界观生成后的功能选择 */}
-          {worldData && !isLoadingHistory && (
+          {worldData && (
             <div className="mt-8">
               <div className="bg-[#c56216]/30 rounded-xl p-6 border border-forge-copper/30">
                 <h3 className="text-forge-copper font-fantasy text-lg mb-4 text-center">✨ 扩展功能</h3>
@@ -404,6 +588,55 @@ export default function Home() {
                       <div className="text-xs opacity-70">推荐历史事件、架空世界和情节片段</div>
                     </div>
                   </button>
+                </div>
+
+                {/* 导出全部内容区域 */}
+                <div className="mt-6">
+                  <button
+                    onClick={() => setShowExportOptions(!showExportOptions)}
+                    className="w-full py-3 bg-gradient-to-r from-forge-copper to-forge-gold text-white rounded-lg transition-all flex items-center justify-center gap-2 hover:from-forge-gold hover:to-forge-copper shadow-lg"
+                  >
+                    <Download className="w-5 h-5" />
+                    导出全部内容
+                  </button>
+                  
+                  {showExportOptions && (
+                    <div className="mt-3 bg-white border border-forge-copper/30 rounded-lg p-4 shadow-lg">
+                      <div className="text-forge-copper font-semibold mb-3 flex items-center gap-2">
+                        <FileDown className="w-5 h-5" />
+                        选择导出格式
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        <button
+                          onClick={exportAsTxt}
+                          className="flex flex-col items-center gap-2 p-3 bg-gray-50 hover:bg-forge-copper/10 border border-gray-200 hover:border-forge-copper/50 rounded-lg transition-all"
+                        >
+                          <FileText className="w-6 h-6 text-forge-copper" />
+                          <span className="text-sm text-gray-700">TXT 文档</span>
+                          <span className="text-xs text-gray-500">纯文本格式</span>
+                        </button>
+                        <button
+                          onClick={exportAsHtml}
+                          className="flex flex-col items-center gap-2 p-3 bg-gray-50 hover:bg-forge-copper/10 border border-gray-200 hover:border-forge-copper/50 rounded-lg transition-all"
+                        >
+                          <FileText className="w-6 h-6 text-forge-copper" />
+                          <span className="text-sm text-gray-700">HTML 文档</span>
+                          <span className="text-xs text-gray-500">美观网页格式</span>
+                        </button>
+                        <button
+                          onClick={exportAsMarkdown}
+                          className="flex flex-col items-center gap-2 p-3 bg-gray-50 hover:bg-forge-copper/10 border border-gray-200 hover:border-forge-copper/50 rounded-lg transition-all"
+                        >
+                          <FileText className="w-6 h-6 text-forge-copper" />
+                          <span className="text-sm text-gray-700">Markdown</span>
+                          <span className="text-xs text-gray-500">通用格式</span>
+                        </button>
+                      </div>
+                      <div className="mt-3 text-xs text-gray-500 text-center">
+                        文件将保存到您的下载文件夹，包含所有世界观内容和灵感推荐
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
