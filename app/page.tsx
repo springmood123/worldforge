@@ -678,7 +678,17 @@ export default function Home() {
       <footer className="border-t border-gray-200 mt-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 py-6 text-center text-gray-500 text-sm">
           <p>WorldForge - 灵感激荡 | 一站式架空世界观构建平台</p>
-          <p className="mt-1">使用 智谱AI API 驱动创意生成</p>
+          <p className="mt-1">
+            如有灵感或疑惑可+
+            <span style={{ 
+              fontFamily: 'SimSun, "宋体", STSong, serif', 
+              fontVariantNumeric: 'tabular-nums', 
+              letterSpacing: '0.05em'
+            }}>
+              q1831182369
+            </span>
+            提出想法
+          </p>
         </div>
       </footer>
     </div>

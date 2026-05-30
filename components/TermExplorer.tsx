@@ -181,6 +181,7 @@ export default function TermExplorer({
             <div>
               <h2 className="text-forge-copper font-fantasy text-lg">词汇探索</h2>
               <p className="text-gray-500 text-xs">深入探索世界观中的概念</p>
+              <p className="text-gray-500 text-xs mt-1">每个词条点击都可以追问，每次追问后的记录都可以保留</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -255,8 +256,11 @@ export default function TermExplorer({
                   <MessageSquare className="w-10 h-10 text-forge-copper" />
                 </div>
                 <h3 className="text-forge-copper text-xl font-fantasy mb-2">开始探索</h3>
-                <p className="text-gray-500 mb-6 max-w-md">
+                <p className="text-gray-500 mb-2 max-w-md">
                   在世界观内容中选择任意词汇或概念，点击即可开始探索
+                </p>
+                <p className="text-gray-500 mb-4 max-w-md text-sm">
+                  每个词条点击都可以追问，每次追问后的记录都可以保留
                 </p>
                 <div className="bg-gray-50 rounded-lg p-4 text-sm">
                   <p className="text-gray-600">💡 提示：点击内容中高亮显示的词汇可以直接选择</p>

@@ -353,7 +353,7 @@ export default function WorldGenerator({
             </div>
             <div className="flex-1">
               <div className="text-forge-copper font-semibold">💡 提示</div>
-              <div className="text-gray-600 text-sm">点击下方内容中高亮显示的词汇，即可开始深入探索！</div>
+              <div className="text-gray-600 text-sm">点击下方内容中高亮显示的词汇，即可开始深入探索！每个词条点击都可以追问，每次追问后的记录都可以保留</div>
             </div>
           </div>
 

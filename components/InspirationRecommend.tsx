@@ -333,7 +333,7 @@ export default function InspirationRecommend({ worldDescription, history, onHist
         
         {/* 说明文字 */}
         <div className="mt-4 text-sm text-gray-500">
-          <p>💡 提示：保守模式确保高质量但创意方向相似；平衡模式在质量和多样性间取得平衡；激进模式探索边缘创新的可能性</p>
+          <p>💡 提示：保守模式确保高质量但创意方向相似；平衡模式在质量和多样性间取得平衡；激进模式探索边缘创新的可能性。每个模块右上角问号的圈点击都可以追问，每次追问后的记录都可以保留</p>
         </div>
       </div>
 

@@ -39,12 +39,41 @@ export default function InspirationQuestioner({
   worldContext,
   onClose 
 }: InspirationQuestionerProps) {
-  const [messages, setMessages] = useState<InspirationMessage[]>([]);
+  // 生成唯一的存储键
+  const storageKey = `inspiration_conversation_${inspirationType}_${inspirationTitle}`;
+  
+  const [messages, setMessages] = useState<InspirationMessage[]>(() => {
+    // 初始化时从 localStorage 加载历史记录
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          // 转换时间戳回 Date 对象
+          return parsed.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          }));
+        } catch {
+          return [];
+        }
+      }
+    }
+    return [];
+  });
+  
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showDownloadOptions, setShowDownloadOptions] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // 自动保存到 localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(storageKey, JSON.stringify(messages));
+    }
+  }, [messages, storageKey]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
